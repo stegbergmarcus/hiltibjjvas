@@ -22,9 +22,10 @@ interface CalendarWidgetProps {
     selected?: Date;
     onSelect?: (date: Date | undefined) => void;
     className?: string;
+    activeDates?: string[]; // ISO Date strings (YYYY-MM-DD)
 }
 
-export function CalendarWidget({ selected, onSelect, className }: CalendarWidgetProps) {
+export function CalendarWidget({ selected, onSelect, className, activeDates = [] }: CalendarWidgetProps) {
     const [currentMonth, setCurrentMonth] = React.useState(new Date());
 
     // Generate days
@@ -57,16 +58,16 @@ export function CalendarWidget({ selected, onSelect, className }: CalendarWidget
             <div className="flex items-center justify-between mb-4">
                 <button
                     onClick={handlePrevMonth}
-                    className="p-1 rounded-full hover:bg-black/5 text-slate-500 hover:text-slate-900 transition-colors"
+                    className="p-1 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
                 >
                     <ChevronLeft size={16} />
                 </button>
-                <span className="text-sm font-bold text-slate-800 capitalize tracking-wide">
+                <span className="text-sm font-bold text-white capitalize tracking-wide">
                     {format(currentMonth, "MMMM yyyy", { locale: sv })}
                 </span>
                 <button
                     onClick={handleNextMonth}
-                    className="p-1 rounded-full hover:bg-black/5 text-slate-500 hover:text-slate-900 transition-colors"
+                    className="p-1 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
                 >
                     <ChevronRight size={16} />
                 </button>
@@ -75,7 +76,7 @@ export function CalendarWidget({ selected, onSelect, className }: CalendarWidget
             {/* Weekday Labels */}
             <div className="grid grid-cols-7 mb-2">
                 {weekDays.map((day) => (
-                    <div key={day} className="text-center text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                    <div key={day} className="text-center text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
                         {day}
                     </div>
                 ))}
@@ -84,9 +85,11 @@ export function CalendarWidget({ selected, onSelect, className }: CalendarWidget
             {/* Days Grid */}
             <div className="grid grid-cols-7 gap-1">
                 {days.map((day) => {
+                    const dateString = format(day, "yyyy-MM-dd");
                     const isSelected = selected && isSameDay(day, selected);
                     const isCurrentMonth = isSameMonth(day, currentMonth);
                     const isCurrentDay = isToday(day);
+                    const hasContent = activeDates.includes(dateString);
 
                     return (
                         <button
@@ -94,16 +97,22 @@ export function CalendarWidget({ selected, onSelect, className }: CalendarWidget
                             onClick={() => handleDayClick(day)}
                             className={clsx(
                                 "h-8 w-full rounded-lg flex items-center justify-center text-xs transition-all relative",
-                                !isCurrentMonth && "text-slate-300",
-                                isCurrentMonth && !isSelected && "text-slate-600 hover:bg-slate-100 font-medium",
-                                isSelected && "bg-slate-900 text-white shadow-md font-bold scale-105 z-10",
-                                isCurrentDay && !isSelected && "text-slate-900 font-bold",
+                                !isCurrentMonth && !isSelected && "text-slate-600 hover:text-slate-400 hover:bg-white/5", // Interactive but dimmer
+                                isCurrentMonth && !isSelected && "text-slate-300 hover:bg-white/10 hover:text-white font-medium",
+                                isSelected && "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20 font-bold scale-105 z-10",
+                                isCurrentDay && !isSelected && "text-white font-bold bg-white/5", // Subtle highlight for today
                             )}
                         >
                             {format(day, "d")}
-                            {/* Dot indicator for 'today' if not selected */}
-                            {isCurrentDay && !isSelected && (
-                                <div className="absolute bottom-1 w-1 h-1 rounded-full bg-slate-900" />
+
+                            {/* Content Indicator (Blue Dot) */}
+                            {hasContent && !isSelected && (
+                                <div className="absolute bottom-1 w-1 h-1 rounded-full bg-indigo-400 shadow-[0_0_6px_rgba(129,140,248,0.8)]" />
+                            )}
+
+                            {/* Today Indicator (if no content, precise small dot) */}
+                            {isCurrentDay && !isSelected && !hasContent && (
+                                <div className="absolute bottom-1 w-1 h-1 rounded-full bg-white/50" />
                             )}
                         </button>
                     );

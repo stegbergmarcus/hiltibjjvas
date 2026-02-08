@@ -8,7 +8,11 @@ import { CalendarWidget } from "./CalendarWidget";
 import { format } from "date-fns";
 import { clsx } from "clsx";
 
-export function Sidebar() {
+interface SidebarProps {
+    activeDates?: string[];
+}
+
+export function Sidebar({ activeDates = [] }: SidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -45,11 +49,12 @@ export function Sidebar() {
     return (
         <aside className="hidden lg:flex flex-col w-80 h-screen sticky top-0 border-r border-white/5 bg-[#020617]/50 backdrop-blur-2xl p-5 gap-6 z-20 shadow-xl">
             {/* Brand */}
-            <div className="flex items-center gap-3 px-2 mb-2">
-                <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                    <span className="font-bold text-white text-lg">H</span>
-                </div>
-                <span className="font-bold text-xl tracking-tight text-white">HILTI BJJ</span>
+            <div className="flex items-center gap-2 px-2 mb-4">
+                <Link href="/" className="flex items-baseline gap-1 group">
+                    <span className="font-black text-2xl tracking-tighter text-white group-hover:text-indigo-200 transition-colors">HILTI</span>
+                    <span className="font-light text-2xl tracking-tight text-indigo-400">BJJ</span>
+                    <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 ml-0.5 animate-pulse"></div>
+                </Link>
             </div>
 
             {/* Global Search Input */}
@@ -74,14 +79,21 @@ export function Sidebar() {
                             key={href}
                             href={href}
                             className={clsx(
-                                "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200",
+                                "group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 active:scale-95",
                                 isActive
                                     ? "bg-white/10 text-indigo-400 shadow-md shadow-black/20 ring-1 ring-white/5"
                                     : "text-slate-400 hover:text-white hover:bg-white/5"
                             )}
                         >
-                            <Icon size={20} className={isActive ? "text-indigo-400" : "text-slate-500 group-hover:text-white"} strokeWidth={isActive ? 2.5 : 2} />
-                            {label}
+                            <Icon
+                                size={20}
+                                className={clsx(
+                                    "transition-colors duration-200",
+                                    isActive ? "text-indigo-400" : "text-slate-500 group-hover:text-white"
+                                )}
+                                strokeWidth={isActive ? 2.5 : 2}
+                            />
+                            <span className={clsx("transition-colors", !isActive && "group-hover:text-white")}>{label}</span>
                         </Link>
                     );
                 })}
@@ -99,22 +111,21 @@ export function Sidebar() {
                 </div>
                 {/* Custom Calendar Widget with glass effect */}
                 <div className="bg-white/5 rounded-3xl p-1 border border-white/5 shadow-inner">
-                    <CalendarWidget selected={currentDate} onSelect={handleDateSelect} />
+                    <CalendarWidget selected={currentDate} onSelect={handleDateSelect} activeDates={activeDates} />
                 </div>
             </div>
 
-            {/* Admin / Footer */}
             <div className="mt-auto pt-6 border-t border-white/5 space-y-1">
                 <Link href="/admin" className={clsx(
-                    "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-white/5 text-slate-400 hover:text-white",
+                    "group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 active:scale-95 hover:bg-white/5 text-slate-400 hover:text-white",
                     pathname === "/admin" && "bg-white/5 text-indigo-400"
                 )}>
-                    <Settings size={18} />
-                    Inställningar
+                    <Settings size={18} className="group-hover:text-white transition-colors" />
+                    <span className="group-hover:text-white transition-colors">Inställningar</span>
                 </Link>
-                <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-white/5 text-slate-400 hover:text-white w-full text-left">
-                    <LogOut size={18} />
-                    Logga ut
+                <button className="group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 active:scale-95 hover:bg-white/5 text-slate-400 hover:text-white w-full text-left">
+                    <LogOut size={18} className="group-hover:text-white transition-colors" />
+                    <span className="group-hover:text-white transition-colors">Logga ut</span>
                 </button>
             </div>
         </aside>

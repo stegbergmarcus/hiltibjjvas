@@ -1,54 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, User, Calendar, Tag, Play } from "lucide-react";
 import { VideoCard } from "@/components/VideoCard";
-
-// Updated Mock Data with YouTube IDs
-// Normally this type definition would be in a separate file (types/video.ts)
-const MOCK_VIDEOS = [
-    {
-        id: "1",
-        title: "Armbar från Guard (Grund)",
-        date: "2023-10-24",
-        duration: "04:20",
-        instructor: "Pelle",
-        tags: ["Armbar", "Closed Guard", "Gi"],
-        description: "Vi går igenom grunderna för hur man sätter upp en Armbar från Closed Guard. Fokus på grepp och vinkel.",
-        youtubeId: "d8pwcJ8o9s8", // Example: A random BJJ video ID
-    },
-    {
-        id: "2",
-        title: "Triangle framifrån (Detaljer)",
-        date: "2023-10-24",
-        duration: "06:15",
-        instructor: "Pelle",
-        tags: ["Triangle", "Closed Guard", "Gi"],
-        description: "Detaljer för att avsluta triangeln effektivt.",
-        youtubeId: "WzWv6DceG7g",
-    },
-    {
-        id: "3",
-        title: "De la Riva sweep till mount",
-        date: "2023-10-22",
-        duration: "03:45",
-        instructor: "Lisa",
-        tags: ["Sweep", "Open Guard", "No-Gi"],
-        description: "En effektiv sweep från De la Riva.",
-    },
-    {
-        id: "4",
-        title: "Kimura från Side Control",
-        date: "2023-10-20",
-        duration: "05:00",
-        instructor: "Kalle",
-        tags: ["Kimura", "Side Control", "Submission"],
-        description: "Kimura låset från topposition.",
-    },
-];
-
-const RELATED_VIDEOS = [
-    MOCK_VIDEOS[1],
-    MOCK_VIDEOS[3],
-];
+import { getVideoById } from "@/lib/youtube";
 
 export default async function VideoPage({
     params,
@@ -57,8 +10,34 @@ export default async function VideoPage({
 }) {
     const { id } = await params;
 
-    // Simulate data fetch
-    const video = MOCK_VIDEOS.find((v) => v.id === id) || MOCK_VIDEOS[0];
+    let video = null;
+
+    // Try to find in saved YouTube videos
+    const youtubeVideo = await getVideoById(id);
+    if (youtubeVideo) {
+        video = {
+            id: youtubeVideo.id,
+            title: youtubeVideo.title,
+            date: new Date(youtubeVideo.publishedAt).toISOString().split('T')[0],
+            duration: "Video", // Generic placeholder
+            instructor: "Hilti BJJ",
+            tags: ["Teknik"], // Generic tag
+            description: youtubeVideo.title, // Just the title as description for now
+            youtubeId: youtubeVideo.id,
+        };
+    }
+
+    if (!video) {
+        // Fallback or 404
+        return (
+            <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                <h2 className="text-xl font-bold mb-2">Video hittades inte</h2>
+                <Link href="/" className="text-indigo-400 hover:text-white transition-colors">
+                    Gå tillbaka till start
+                </Link>
+            </div>
+        );
+    }
 
     return (
         <main className="flex-1 flex flex-col lg:flex-row h-full overflow-hidden">
@@ -136,9 +115,8 @@ export default async function VideoPage({
             <aside className="w-full lg:w-96 border-t lg:border-t-0 lg:border-l border-white/5 bg-[#020617]/50 backdrop-blur-md p-4 lg:p-6 overflow-y-auto">
                 <h2 className="text-xl font-bold text-white mb-6">Relaterat</h2>
                 <div className="grid gap-6">
-                    {RELATED_VIDEOS.map(video => (
-                        <VideoCard key={video.id} {...video} />
-                    ))}
+                    {/* Placeholder for related videos logic. For now, empty or fetch more */}
+                    <p className="text-slate-500 text-sm">Fler klipp kommer snart!</p>
                 </div>
             </aside>
         </main>

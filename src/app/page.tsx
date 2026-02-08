@@ -1,57 +1,10 @@
 import { VideoCard } from "@/components/VideoCard";
 import { CalendarFilter } from "@/components/CalendarFilter";
+import { getVideosWithAutoSync } from "@/lib/youtube";
+import { Video } from "lucide-react";
+import { Video as VideoData } from "@/types";
 
-// Mock Data
-const MOCK_VIDEOS = [
-  {
-    id: "1",
-    title: "Armbar från Guard (Grund)",
-    date: "2023-10-24",
-    duration: "04:20",
-    instructor: "Pelle",
-    tags: ["Armbar", "Closed Guard", "Gi"],
-  },
-  {
-    id: "2",
-    title: "Triangle framifrån (Detaljer)",
-    date: "2023-10-24",
-    duration: "06:15",
-    instructor: "Pelle",
-    tags: ["Triangle", "Closed Guard", "Gi"],
-  },
-  {
-    id: "3",
-    title: "De la Riva sweep till mount",
-    date: "2023-10-22",
-    duration: "03:45",
-    instructor: "Lisa",
-    tags: ["Sweep", "Open Guard", "No-Gi"],
-  },
-  {
-    id: "4",
-    title: "Kimura från Side Control",
-    date: "2023-10-20",
-    duration: "05:00",
-    instructor: "Kalle",
-    tags: ["Kimura", "Side Control", "Submission"],
-  },
-  {
-    id: "5",
-    title: "Ryggtagning från Turtle",
-    date: "2023-10-18",
-    duration: "07:30",
-    instructor: "David",
-    tags: ["Back Take", "Turtle", "No-Gi"],
-  },
-  {
-    id: "6",
-    title: "Armbar från Mount",
-    date: "2023-10-18",
-    duration: "04:10",
-    instructor: "David",
-    tags: ["Submission", "Mount", "Gi"],
-  },
-];
+export const dynamic = "force-dynamic";
 
 export default async function Home({
   searchParams,
@@ -62,7 +15,31 @@ export default async function Home({
   const q = typeof resolvedParams.q === 'string' ? resolvedParams.q.toLowerCase() : "";
   const dateResult = typeof resolvedParams.date === 'string' ? resolvedParams.date : undefined;
 
-  const filteredVideos = MOCK_VIDEOS.filter((video) => {
+  let youtubeVideos: VideoData[] = [];
+  try {
+    youtubeVideos = await getVideosWithAutoSync();
+  } catch (error) {
+    console.error("Failed to fetch videos for Home page:", error);
+  }
+
+  // Normalize YouTube videos to match the data structure
+  const normalizedYoutubeVideos = youtubeVideos.map(v => ({
+    id: v.id,
+    title: v.title,
+    date: (() => {
+      try {
+        return v.publishedAt ? new Date(v.publishedAt).toISOString().split('T')[0] : "";
+      } catch (e) {
+        return "";
+      }
+    })(),
+    duration: "YouTube",
+    instructor: "Hilti BJJ",
+    tags: [...(v.collections || []), ...(v.tags || [])],
+    thumbnailUrl: v.thumbnail
+  }));
+
+  const filteredVideos = normalizedYoutubeVideos.filter((video) => {
     const matchesQuery = !q ||
       video.title.toLowerCase().includes(q) ||
       video.tags.some(tag => tag.toLowerCase().includes(q)) ||
@@ -100,37 +77,18 @@ export default async function Home({
           <p className="text-lg font-medium">Inga videos hittades.</p>
           <p className="text-sm">Prova att söka på något annat eller byt datum.</p>
         </div>
-      ) : isFiltering ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-          {filteredVideos.map((video) => (
-            <VideoCard key={video.id} {...video} />
-          ))}
-        </div>
       ) : (
-        <>
-          {/* Default View: Latest Videos Grid */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-indigo-400 mb-2">
+            <Video size={20} />
+            <h2 className="text-xl font-bold text-white">Nyligen Uppladdat</h2>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-            {filteredVideos.slice(0, 2).map((video) => (
+            {filteredVideos.map((video) => (
               <VideoCard key={video.id} {...video} />
             ))}
           </div>
-
-          <div className="relative py-8">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-white/10" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase tracking-widest">
-              <span className="bg-white/5 backdrop-blur-md px-4 py-1 rounded-full text-slate-400 font-bold border border-white/5">Tidigare</span>
-            </div>
-          </div>
-
-          {/* Previous Videos Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-            {filteredVideos.slice(2).map((video) => (
-              <VideoCard key={video.id} {...video} />
-            ))}
-          </div>
-        </>
+        </div>
       )}
     </main>
   );
