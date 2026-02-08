@@ -1,6 +1,4 @@
-import dynamicImport from 'next/dynamic';
-
-const AdminContent = dynamicImport(() => import('./AdminContent'), { ssr: false });
+import AdminContent from './AdminContent';
 
 export const dynamic = "force-dynamic";
 
